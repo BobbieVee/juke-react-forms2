@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import {hashHistory} from 'react-router';
 import axios from 'axios';
 
 import initialState from '../initialState';
@@ -23,6 +24,9 @@ export default class AppContainer extends Component {
     this.prev = this.prev.bind(this);
     this.selectAlbum = this.selectAlbum.bind(this);
     this.selectArtist = this.selectArtist.bind(this);
+    this.createNewPlaylistDB = this.createNewPlaylistDB.bind(this);
+    this.selectPlaylist = this.selectPlaylist.bind(this);
+    this.addSongToPlaylist = this.addSongToPlaylist.bind(this);
   }
 
   componentDidMount () {
@@ -30,10 +34,15 @@ export default class AppContainer extends Component {
     Promise
       .all([
         axios.get('/api/albums/'),
-        axios.get('/api/artists/')
+        axios.get('/api/artists/'),
+        axios.get('/api/playlists'),
+        axios.get('/api/songs')
       ])
       .then(res => res.map(r => r.data))
-      .then(data => this.onLoad(...data));
+      .then(data => {
+        this.onLoad(...data) 
+      }
+        );
 
     AUDIO.addEventListener('ended', () =>
       this.next());
@@ -41,10 +50,12 @@ export default class AppContainer extends Component {
       this.setProgress(AUDIO.currentTime / AUDIO.duration));
   }
 
-  onLoad (albums, artists) {
+  onLoad (albums, artists, playlists, songs) {
     this.setState({
       albums: convertAlbums(albums),
-      artists: artists
+      artists: artists,
+      playlists: playlists,
+      songs: songs
     });
   }
 
@@ -124,19 +135,52 @@ export default class AppContainer extends Component {
     this.setState({ selectedArtist: artist });
   }
 
+  createNewPlaylistDB(playlist){
+    let nuPlaylist    
+    axios.post('/api/playlists', { name: playlist})
+      .then(r => r.data)
+      .then((playlist => nuPlaylist = playlist))
+      .then(() => axios.get('/api/playlists'))
+      .then(r => r.data)
+      .then(playlists => {
+        this.setState({playlists});
+        const newPath = `/playlists/${nuPlaylist.id}`;
+        hashHistory.push(newPath);
+      })
+  };
+
+  selectPlaylist (playlistId) {
+    axios.get(`/api/playlists/${playlistId}`)
+      .then(res => res.data)
+      .then(playlist => {
+        if (playlist.songs){playlist.songs = playlist.songs.map(convertSong)};
+        this.setState({
+          selectedPlaylist: playlist
+        });
+      });
+  };
+
+  addSongToPlaylist(song){
+    console.log("addSongToPlaylist!!!!!!!!")
+
+  }
+
   render () {
 
     const props = Object.assign({}, this.state, {
       toggleOne: this.toggleOne,
       toggle: this.toggle,
       selectAlbum: this.selectAlbum,
-      selectArtist: this.selectArtist
+      selectArtist: this.selectArtist,
+      createNewPlaylistDB: this.createNewPlaylistDB,
+      selectPlaylist: this.selectPlaylist,
+      addSongToPlaylist: this.addSongToPlaylist
     });
 
     return (
       <div id="main" className="container-fluid">
         <div className="col-xs-2">
-          <Sidebar />
+          <Sidebar props={props}/>
         </div>
         <div className="col-xs-10">
         {

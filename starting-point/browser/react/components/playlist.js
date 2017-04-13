@@ -4,7 +4,9 @@ import Songs from './songs';
 class Playlist extends React.Component{
 	constructor(props){
 		super(props);
-		state: {value: 0 }
+		this.state={value: 0 };
+		this.addSong = this.addSong.bind(this);
+		this.handleChange = this.handleChange.bind(this);
 	}
 
 	componentWillMount(){
@@ -19,17 +21,22 @@ class Playlist extends React.Component{
 	}
 
 	handleChange(e){
-		this.setState({value: e.target.value});
+		const value = e.target.value;
+		console.log('value = ', value)
+		this.setState({value: value});
+			
+
 	}
 
 	addSong(event){
-	console.log('value = ', event)
+	console.log('event = ', this.state.value)
 		// this.props.addSongToPlaylist(event.target.value);
 	}
 
 	render(){
 		const playlist = this.props.selectedPlaylist;
-		console.log('props = ', this.props)
+		// console.log('props = ', this.props)
+		// console.log('state = ', this.state)
 
 		return(
 			<div>
@@ -40,17 +47,17 @@ class Playlist extends React.Component{
 			  <hr />
 			</div>
 			<div className="well">
-			    <form onSubmit={this.addSong} className="form-horizontal" noValidate name="songSelect">
+			    <form onSubmit={this.addSong} value={this.state.value} className="form-horizontal" noValidate name="songSelect">
 			      <fieldset>
 			        <legend>Add to Playlist</legend>
 			        <div className="form-group">
 			          <label htmlFor="song" className="col-xs-2 control-label">Song</label>
 			          <div className="col-xs-10">
-			            <select className="form-control"  onChange={this.handleChange}>
+			            <select className="form-control" value={this.state.value} onChange={this.handleChange}>
 			            {
 			            	this.props.songs.map((song)=>{
 			            		return(
-			            			<option key={song.id} value={song.id}>{song.name}</option>
+			            			<option key={song.id} value={song.nextId}>{song.name}</option>
 		            			)
 			            	})
 			            }
